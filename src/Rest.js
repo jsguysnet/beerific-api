@@ -4,6 +4,8 @@ class Rest {
     this._database = database;
     this._bodyParser = bodyParser;
     this._config = config;
+    
+    this._lastError = null;
   }
   
   initRoute() {
@@ -13,7 +15,21 @@ class Rest {
       let query = req.body.query;
       
       self._query(query, (data) => {
-        res.json(data);
+        self._respond(res, data);
+      });
+    })
+    
+    self._webserver.get('/:table/:id?', (req, res) => {      
+      let table = req.params.table.replace(/[^a-z_]+/i, '');
+      let id = parseInt(req.params.id);
+      
+      let query = 'SELECT * FROM ' + table;
+      if (id) {
+        query += ' WHERE id = ' + id;
+      }
+      
+      self._query(query, (data) => {
+        self._respond(res, data);
       });
     });
   }
@@ -37,8 +53,39 @@ class Rest {
     // TODO escape query
     
     self._database.connect();
-    self._database.query(query, callback);
+    self._database.query(query, (data, error) => {
+      if (!error) {
+        callback(data);
+      }
+      else {
+        self._lastError = error;
+        callback(false);
+      }
+    });
     self._database.disconnect();
+  }
+  
+  _respond(res, data) {
+    let self = this;
+    
+    let json = {
+      success: true
+    };
+    
+    if (data) {
+      json.data = data;
+    }
+    else {
+      json.success = false;
+      
+      if (this._lastError) {
+      }
+      else {
+        json.message = 'An unknwon error occurred.';
+      }
+    }
+    
+    res.json(json);
   }
 }
 

@@ -21,14 +21,9 @@ class Database {
   
   query(query, callback) {
     this._connection.query(query, (err, rows, fields) => {
-      if (!err) {        
-        callback(rows);
-      }
-      else {
-        console.log('ERR', err);
-      }
+      callback(rows, err);
     });
-  } 
+  }
 }
 
 module.exports = exports = Database;
