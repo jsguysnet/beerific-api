@@ -78,14 +78,16 @@ class Rest {
     else {
       json.success = false;
       
-      if (this._lastError) {
+      if (self._lastError) {
+        json.message = self._lastError.message;
+        json.message = json.message.substr(json.message.indexOf(':') + 1).trim();
       }
       else {
         json.message = 'An unknwon error occurred.';
       }
     }
     
-    res.json(json);
+    res.status(json.success ? 200 : 500).json(json);
   }
 }
 
