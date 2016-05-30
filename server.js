@@ -1,3 +1,7 @@
+global.rootRequire = function(name) {
+    return require(__dirname + '/' + name);
+};
+
 let dbConfig = require('./config/db.json');
 let serverConfig = require('./config/webserver.json');
 

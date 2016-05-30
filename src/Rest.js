@@ -17,7 +17,7 @@ class Rest {
       self._query(query, (data) => {
         self._respond(res, data);
       });
-    })
+    });
     
     self._webserver.get('/:table/:id?', (req, res) => {      
       let table = req.params.table.replace(/[^a-z_]+/i, '');
@@ -32,8 +32,13 @@ class Rest {
         self._respond(res, data);
       });
     });
+
+    // service router
+    self._webserver.post('^/:version(latest|[0-9]\.[0-9])/:module([a-z\-]+)/:action([a-z\-]+).service$', (req, res) => {
+      self._callService(req.params, req.body, res);
+    });
   }
-  
+
   start() {
     this._webserver.use(this._bodyParser.json());
     this._webserver.use(this._bodyParser.urlencoded({extended: true}));
@@ -67,7 +72,12 @@ class Rest {
   
   _respond(res, data) {
     let self = this;
-    
+
+    if (data && data.hasOwnProperty('success')) {
+      res.status(data.success ? 200 : 500).json(data);
+      return;
+    }
+
     let json = {
       success: true
     };
@@ -88,6 +98,40 @@ class Rest {
     }
     
     res.status(json.success ? 200 : 500).json(json);
+  }
+
+  _callService(callParams, serviceParams, response) {
+    let self = this;
+    let serviceConfig = rootRequire('config/service').service[0];
+
+    if (!serviceConfig.hasOwnProperty(callParams.module + '.' + callParams.action)) {
+      return {
+        success: false,
+        message: 'Service is unavailable.'
+      };
+    }
+
+    // get external dependencies
+    let dependencies = serviceConfig[callParams.module + '.' + callParams.action][0]['dependencies'];
+
+    if (dependencies) {
+      dependencies = dependencies[0];
+
+      for (var key in dependencies) {
+        serviceParams[key] = self[dependencies[key]];
+      }
+    }
+    //TODO version einbauen
+
+    callParams.action = callParams.action[0].toUpperCase() + callParams.action.substr(1);
+    
+    let Service = rootRequire('/service/' + callParams.module + '/' + callParams.action);
+    
+    let service = new Service(serviceParams);
+    service.call((data) => {
+      self._respond(response, data);
+      return;
+    });
   }
 }
 
