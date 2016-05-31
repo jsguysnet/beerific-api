@@ -31,12 +31,23 @@ class Search extends aService {
 
                 // filter data
                 if (self._params.filter) {
+                    
                     data = data.filter(self._filterRadius.bind(self));
+
+                    if (self._params.filter.limit && self._params.filter.limit > 0) {
+                        data = data.slice(0, parseInt(self._params.filter.limit));
+                    }
                 }
 
-                data = data.filter(function (item) {
-                    return true;
-                });
+                // sort data
+                if (self._params.sort) {
+                    // sort the hell here
+                }
+                else {
+                    data.sort(function (a, b) {
+                        return a.distance - b.distance;
+                    });
+                }
 
                 callback(data);
             }
