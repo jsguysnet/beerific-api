@@ -16,15 +16,27 @@ class Search extends aService {
         let self = this;
 
         self._params.db.connect();
+        let query = 'SELECT * FROM v_beergarden_list';
 
         self._params.db.query('SELECT * FROM v_beergarden_list', (data, error) => {
             if (!error) {
+                let response = [];
+
                 // calculate distance
                 if (self._params.latitude && self._params.longitude) {
                     for (var row in data) {
                         data[row].distance = self._getDistance(data[row].latitude, data[row].longitude);
                     }
                 };
+
+                // filter data
+                if (self._params.filter) {
+                    data = data.filter(self._filterRadius.bind(self));
+                }
+
+                data = data.filter(function (item) {
+                    return true;
+                });
 
                 callback(data);
             }
@@ -51,6 +63,15 @@ class Search extends aService {
 
         let distance = self.EARTH_RADIUS * Math.acos(latProd + lngProd);
         return Math.round(distance * acc) / acc;
+    }
+
+    _filterRadius (item) {
+        var self = this;
+        if (self._params.filter.radius && item.distance) {
+            return self._params.filter.radius > item.distance;
+        }
+
+        return true;
     }
 };
 

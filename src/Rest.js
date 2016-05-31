@@ -10,7 +10,13 @@ class Rest {
   
   initRoute() {
     let self = this;
-    
+
+    self._webserver.use(function (req, res, next) {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+      next();
+    });
+
     self._webserver.post('/', (req, res) => {
       let query = req.body.query;
       
