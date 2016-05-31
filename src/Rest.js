@@ -34,7 +34,7 @@ class Rest {
     });
 
     // service router
-    self._webserver.post('^/:version(latest|[0-9]\.[0-9])/:module([a-z\-]+)/:action([a-z\-]+)', (req, res) => {
+    self._webserver.post('^/:version(latest|[0-9]\.[0-9])/:module([a-z\-]+)/:action([a-z\-]+).service$', (req, res) => {
       self._callService(req.params, req.body, res);
     });
   }
