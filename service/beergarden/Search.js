@@ -20,8 +20,6 @@ class Search extends aService {
 
         self._params.db.query('SELECT * FROM v_beergarden_list', (data, error) => {
             if (!error) {
-                let response = [];
-
                 // calculate distance
                 if (self._params.latitude && self._params.longitude) {
                     for (var row in data) {
@@ -31,7 +29,6 @@ class Search extends aService {
 
                 // filter data
                 if (self._params.filter) {
-                    
                     data = data.filter(self._filterRadius.bind(self));
 
                     if (self._params.filter.limit && self._params.filter.limit > 0) {
@@ -44,9 +41,11 @@ class Search extends aService {
                     // sort the hell here
                 }
                 else {
-                    data.sort(function (a, b) {
-                        return a.distance - b.distance;
-                    });
+                    if (self._params.latitude && self._params.longitude) {
+                        data.sort(function (a, b) {
+                            return a.distance - b.distance;
+                        });
+                    }
                 }
 
                 callback(data);
